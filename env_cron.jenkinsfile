@@ -1,0 +1,56 @@
+pipeline {
+    options {
+        timestamps()
+    }
+
+    agent any
+
+    stages {
+        stage('checkout'){
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('run_env'){
+            steps {
+                script {
+                    // find which envs have resources
+                    sh """ 
+                        cd terraform && terraform init
+                        terraform workspace list | awk '{gsub(/\\*/,""); print}' > workspaces.txt > workspaces.txt
+                        touch active_workspaces.txt
+                        
+                        for workspace in \$(cat workspaces.txt)
+                        do
+                            terraform workspace select \$workspace
+                            resources=\$(terraform state list)
+
+                            if [ "\$resources" ]; then
+                                echo \$workspace >> active_workspaces.txt
+                            fi 
+                        done
+                    """
+                    // contains all the running envs
+                    env.workspace_env = sh(
+                        script: "cd terraform && cat active_workspaces.txt",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            deleteDir()
+            
+            // Send mail of the running envs
+            emailext(
+                to: "daniel577000@gmail.com" , 
+                subject: 'Currently running enviroments',  
+                body: "Those are the current up env: ${env.workspace_env}"
+            )
+        }
+    }
+}
