@@ -95,8 +95,7 @@ pipeline {
                     fi
 
                     terraform workspace new \$workspace_env || terraform workspace select \$workspace_env
-                    terraform taint module.ec2.aws_instance.app || echo "First time"
-                    terraform apply -auto-approve   
+                    terraform apply -auto-approve -replace="module.ec2.aws_instance.app"   
                 """
             }  
         }
