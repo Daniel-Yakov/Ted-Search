@@ -18,7 +18,7 @@ pipeline {
                     // find which envs have resources
                     sh """ 
                         cd terraform && terraform init
-                        terraform workspace list | awk '{gsub(/\\*/,""); print}' > workspaces.txt > workspaces.txt
+                        terraform workspace list | awk '{gsub(/\\*/,""); print}' > workspaces.txt
                         touch active_workspaces.txt
                         
                         for workspace in \$(cat workspaces.txt)
